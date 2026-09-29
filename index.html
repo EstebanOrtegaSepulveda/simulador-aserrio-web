@@ -820,153 +820,15 @@ progress { width: 100%; max-width: 360px; accent-color: var(--steel); }
 
 
 
-  <!-- Pestañas -->
-  <div class="tabs">
-    <div class="tabs-head">
-    <div class="tablist" role="tablist" aria-label="Herramientas de QA">
-      <button role="tab" id="t-casos" aria-controls="p-casos" aria-selected="false" tabindex="-1" hidden>Casos de prueba</button>
-      <button role="tab" id="t-sup" aria-controls="p-sup" aria-selected="true">Supuestos y fórmulas</button>
-    </div>
-    <button type="button" class="plegar" data-plegar="tabs" aria-expanded="true" aria-controls="tabsBody" aria-label="Minimizar supuestos y fórmulas"><span class="chev" aria-hidden="true">▾</span> <span class="plegar-txt">Minimizar</span></button>
-    </div>
+  <!-- Pestañas: no se publican -->
+  <div class="tabs" hidden style="display:none">
+    <div class="tabs-head"><div class="tablist" role="tablist">
+      <button role="tab" id="t-casos" aria-controls="p-casos" aria-selected="false" tabindex="-1" hidden></button>
+      <button role="tab" id="t-sup" aria-controls="p-sup" aria-selected="true"></button>
+    </div><button type="button" class="plegar" data-plegar="tabs" aria-expanded="true" aria-controls="tabsBody" aria-label="Minimizar"><span class="chev"></span> <span class="plegar-txt"></span></button></div>
     <div id="tabsBody">
-
-    <div class="tabpanel" role="tabpanel" id="p-casos" aria-labelledby="t-casos" hidden>
-      <p class="muted" style="margin-top:0">Los casos base tienen valores esperados calculados a mano. Los casos de referencia guardan la salida actual del motor para detectar cambios en versiones futuras (regresión).</p>
-      <div class="btn-row">
-        <button id="runCasos">Ejecutar todos los casos</button>
-        <button class="ghost dl-btn" id="dlCasos" hidden disabled>Descargar resultados (CSV)</button>
-      </div>
-      <p class="status" id="casosResumen"></p>
-      <div class="table-wrap"><table id="tablaCasos"></table></div>
-      <h3>Guardar la entrada actual como caso de referencia</h3>
-      <div class="inline-form">
-        <input type="text" id="refNombre" placeholder="Nombre del caso" aria-label="Nombre del caso de referencia">
-        <button class="ghost" id="guardarRef">Guardar caso</button>
-      </div>
-      <p class="note">Los casos de referencia se guardan en este navegador.</p>
-      <p class="status" id="refStatus"></p>
-    </div>
-
-<div class="tabpanel prose" role="tabpanel" id="p-sup" aria-labelledby="t-sup">
-      <h3 style="margin-top:0">Proceso</h3>
-      <p>Twin 1 y Twin 2 son máquinas idénticas en serie, cada una con dos sierras verticales simétricas. En Twin 1 el posicionador orienta el trozo con la curvatura hacia arriba y las sierras cortan los costados; los lampazos caen a la mesa. La pieza gira 90° y en Twin 2 la curvatura queda hacia un lado; el posicionador la ubica según la medición y las sierras cortan los dos costados restantes.</p>
-      <p>Lampazos (layout del aserradero): los de Twin 1 (TW1-A y TW1-B) pasan por la Canteadora 1, que saca una tira de un ancho, y por el Mill 1, que la corta en tablas. Los de Twin 2 (TW2-C y TW2-D) pasan primero por el Mill 2, que los corta en capas, y luego por la Canteadora 2, que cantea cada capa por separado a uno de sus dos anchos preparados. Por ahora los trozadores 1 y 2 están fuera de servicio: cada tabla sale del largo del trozo y en la línea se clasifica a la vista en P1, P2/P3 y P4.</p>
-      <h3>Supuestos acordados</h3>
-      <ol>
-        <li>Sección circular. D es el diámetro menor sin corteza (punta delgada) y se usa como diámetro constante en todo el largo; se ignora la conicidad, lo que deja el cálculo del lado seguro.</li>
-        <li>Curvatura X en un solo plano, con un arco simple centrado a mitad del largo.</li>
-        <li>En Twin 1 la curvatura es paralela a las sierras y no afecta la distancia H. En Twin 2 la curvatura es perpendicular a las sierras y afecta la distancia C.</li>
-        <li>Twin 1 centra el trozo (lampazos iguales). Twin 2 desplaza la pieza según la medición de X para que el centro de cada sección quede entre −X/2 y +X/2 del eje de corte (opción c).</li>
-        <li>C y H son medidas de corte en verde. El ancho de corte (en inglés, kerf: madera que se pierde en aserrín en cada corte) queda hacia afuera de la basa.</li>
-        <li>Kerf único K para todas las máquinas: Twin 1, Twin 2, Canteadora 1 y 2 y Mill 1 y 2.</li>
-        <li>Sin aserrío en curva. No se acepta canto muerto en la basa.</li>
-      </ol>
-      <h3>Fórmulas de basa sin conicidad (D mayor = D)</h3>
-      <p>Canto vivo: <span class="formula">(C + X)² + H² ≤ D²</span>. Diámetro menor mínimo para canto vivo: <span class="formula">D_min = √((C + X)² + H²)</span></p>
-      <p>Criterio original, solo para comparación: <span class="formula">√(C² + H²) ≤ D − X</span></p>
-      <p>Ancho máximo factible: <span class="formula">C_max = √(D² − H²) − X</span> y alto máximo factible: <span class="formula">H_max = √(D² − (C + X)²)</span></p>
-      <p>Regla de asignación (solo aviso): como <span class="formula">(C + X)² + H² ≤ C² + (H + X)²  ⟺  C ≤ H</span>, conviene que Twin 2 corte la dimensión menor. Si C &gt; H, el motor informa el resultado con las medidas intercambiadas, sin cambiarlas.</p>
-      <p>Vista superior en Twin 2: semiancho de madera a la altura de las esquinas <span class="formula">w = √(R² − (H/2)²)</span>, margen mínimo <span class="formula">m = w − (C + X)/2</span>. Hay canto vivo si m ≥ 0, que equivale a la condición del motor. Con el arco parabólico centrado (S2), el largo con canto muerto es <span class="formula">L·(1 − √((X + m)/X))</span> en el lado convexo (puntas) y <span class="formula">L·√(−m/X)</span> en el lado cóncavo (centro), acotados entre 0 y L.</p>
-      <p>Lampazo Twin 1, constante en el largo: <span class="formula">(D − H)/2 − K</span></p>
-      <p>Lampazo Twin 2 en la sección sin desplazamiento: <span class="formula">(D − C)/2 − K</span>, que varía a lo largo del trozo entre <span class="formula">(D − X − C)/2 − K</span> y <span class="formula">(D + X − C)/2 − K</span>. Un grosor 0 significa que en esa zona no hay lampazo.</p>
-      <p>El criterio de recuperación del modelo original (grosor ≥ x + K, con espesor mínimo x) fue reemplazado por la evaluación de tablas del motor v4 en las fichas de lampazos.</p>
-      <p>Volumen del trozo, JAS con D exacto: <span class="formula">V = D[cm]² × L[m] / 10.000</span>. Volumen de basa: <span class="formula">C × H × L</span> en medidas de corte en verde.</p>
-      <h3>Motor v9.4: espesor y ancho por capa en TW1 y TW2</h3>
-      <ol>
-        <li>La Canteadora 2 ya no trabaja con dos anchos preparados: cada capa de TW2-C y TW2-D usa cualquier ancho de la lista. El motor elige el de mayor producción (P1 + P2/P3) y, si hay empate, el de mejor calidad.</li>
-        <li>Para cada capa el motor entrega todas las opciones de ancho que caben (posición, piezas, canto muerto, tramo sin cara y volumen). En el panel "Medidas por lampazo" (sobre la Vista 3D) la propuesta del motor lleva ★ y el usuario puede elegir otro ancho por capa: la Vista 3D, las fichas y el resumen del trozo cambian al instante. "↺ Restablecer propuesta", en el encabezado del panel, deshace los cambios; Calcular también vuelve a la propuesta.</li>
-        <li>El usuario puede cambiar el espesor y el ancho de cada capa (solo en TW2, con el mismo número de capas del motor y los espesores de la lista). Si cambia un espesor, las capas de arriba conservan su espesor y ancho, y se recalcula su altura de corte en el Mill 2 y su posición en la Canteadora 2 (misma búsqueda que el motor). La capa extra (corte libre) se edita igual y, si queda P1 o P2/P3, cuenta como producción.</li>
-        <li>TW1-A y TW1-B: en el mismo panel el usuario puede cambiar el ancho de la tira de la Canteadora 1 (uno para toda la tira) y el espesor de cada tabla (espesores de la lista, mismo número de tablas del motor). TW1-B es el espejo de TW1-A y sigue su elección. En cada cambio la Canteadora 1 se vuelve a posicionar para toda la tira (e_c y φ, misma búsqueda del motor con las tablas de producción); la tabla extra (corte libre) conserva esa posición, su ancho es el de la tira y su espesor también se puede cambiar. Cada ancho muestra la producción de la tira y la categoría de sus tablas con los espesores elegidos; "no cabe" = la tira no entra en el lampazo.</li>
-        <li>Vista 3D: "Separar capas" (0 % al abrir) abre cada lampazo por los cortes del Mill. La envoltura del lampazo se corta en franjas, una por capa (TW2) o por tabla (TW1), más el resto de arriba que va a la astilladora; cada franja se mueve con su capa, la capa 1 queda junto a la basa y cada una de las siguientes se aleja un paso más (100 mm por capa al 100 %). Cada capa lleva toda la madera del lampazo a su altura; en TW1 los costados de la Canteadora 1 se reparten entre las tablas según su altura. "Separar piezas" sigue alejando los lampazos de la basa.</li>
-        <li>v9.8 · Uniformidad en TW1: el ancho de la tira de la Canteadora 1 lo decide la capa 1 (P1 por volumen; P2/P3 por uniformidad). Las capas 2 y siguientes pueden pasar por la mesa de tablas a la Canteadora 2 y quedar igual o más angostas que la tira, siempre dentro de la tabla que ya viene: P1 conserva el ancho de la tira; P2/P3 y P4 toman el ancho de mayor uniformidad (con menos de 0,5 punto, el de más volumen). La capa 1 nunca pasa por la Canteadora 2. En Medidas por lampazo cada capa 2+ tiene su fila «Ancho de recanteo».</li>
-        <li>v9.7 · Uniformidad: madera real de la tabla ÷ (espesor × ancho × largo); 100 % = sin canto muerto. Se muestra en cada ancho de TW2 en el panel "Medidas por lampazo". En TW2 el motor elige por uniformidad: en las capas P2/P3, entre los anchos del mismo espesor que no bajan a P4, el de mayor uniformidad; en las capas extra de corte libre (P4), el ancho y el espesor de mayor uniformidad. Con menos de 0,5 punto de diferencia, el de más volumen. Una tabla uniforme se vende mejor. Las capas P1 y TW1 no cambian. En "Todas las combinaciones" la propuesta del motor va primera.</li>
-        <li>v9.6 · Producción real: cada pieza vale la madera que de verdad tiene. En cada sección (cada 10 mm) se calcula el área de la tabla dentro del trozo, con la forma real (conicidad, curvatura y posición de las canteadoras), y se descuenta el canto muerto; el volumen es la suma a lo largo de la pieza. Producción = P1 + P2/P3 + P4 con ese volumen real; la basa sale con canto vivo en todo el largo y cuenta completa. El motor maximiza primero P1 + P2/P3 real (en empate, más P1); P4 sigue solo para las capas o tablas extra y los desempates. En la ficha de cada lampazo se ve el volumen nominal (espesor × ancho × largo) y el canto muerto descontado.</li>
-        <li>v9.6 · Resumen: panel después de "Trozo requerido" con la producción del trozo (basa + P1 + P2/P3 + P4, volumen real), el volumen JAS y el aprovechamiento; la basa, P1, P2/P3 y P4 con sus m³ y piezas; y las piezas del trozo por medida y grupo con su producción y su aprovechamiento (producción / volumen JAS). Los interruptores de las cifras P2/P3 y P4 las sacan de la cuenta (quedan tachadas); solo cambian la cuenta del resumen y vuelven a "Incluir" en cada cálculo.</li>
-        <li>v9.5 · Desempate por P1: si dos cortes dan la misma producción (P1 + P2/P3), el motor elige el de más volumen P1; luego siguen los desempates anteriores (menos piezas, mejor canto, menor movimiento de la canteadora). Vale para la tira de TW1, las capas de TW2 y la posición de las canteadoras. En TW1 se prueban también los otros órdenes de espesores de la mejor tira (por ejemplo, la tabla gruesa abajo), que pueden empatar en producción con más P1.</li>
-        <li>v9.5 · Todas las combinaciones: al pie del panel "Medidas por lampazo", una pestaña por lampazo (TW1-A y TW1-B, TW2-C, TW2-D) lista todas las combinaciones de espesor y ancho con el mismo número de tablas o capas del motor, cada tabla con espesor × ancho × largo y su grupo. Orden: producción, luego más P1, más P3 y más P4; la propuesta del motor (★) queda primera. Se muestran 10 ("Ver todas" para el resto); tocar una fila la aplica en el panel y la Vista 3D. Las que no caben en el lampazo van al final en gris como "No recomendado".</li>
-        <li>Sin izquierda / derecha: los lampazos se nombran TW1-A, TW1-B, TW2-C y TW2-D, y el desplazamiento e_c y el giro φ de las canteadoras se informan con signo (Canteadora 1: + hacia el canto convexo del lampazo; Canteadora 2: + hacia el lado TW1-A).</li>
-      </ol>
-      <h3>Motor v9.3: cara faltante tolerada en las puntas</h3>
-      <ol>
-        <li>Se quita el "largo tolerado". Una pieza puede no tener cara arriba (sin superficie para clavar) en un tramo de hasta el % indicado para su grupo, solo en las puntas (se suman las dos). Por defecto P1 0 % y P2/P3 10 %.</li>
-        <li>Fuera del tramo sin cara, la pieza cumple los límites de ancho y espesor de su grupo en todo el largo. Si falta la cara fuera de las puntas (por ejemplo, al centro), la pieza es P4 con cualquier %.</li>
-        <li>Las fichas indican, por capa o tabla, el tramo sin cara (mm en cada punta y % del largo) y si fue tolerado o dio P4.</li>
-        <li>Canteadora 1 (TW1-A y TW1-B): entre las posiciones que dan la misma producción, el motor elige la de menos canto muerto (por pieza de producción, peor % de ancho + peor % de espesor) y, si sigue el empate, la de menor desplazamiento y giro, igual que en la Canteadora 2. La producción no cambia; mejora la calidad.</li>
-      </ol>
-      <h3>Motor v9.2: sin trozadores y grupos P1 · P2/P3 · P4</h3>
-      <ol>
-        <li>Trozadores 1 y 2 fuera de servicio: cada tabla sale del largo del trozo; se quitan "otros largos" y los cortes del trozador. El código queda guardado para cuando vuelvan a funcionar.</li>
-        <li>Clasificación en tres grupos, como en la línea: P1 (ancho ≤ 10 %, espesor ≤ 25 %), P2/P3 (ancho ≤ 90 %, espesor ≤ 90 %) y P4 (más, o sin cara para clavar). v9.6: producción = P1 + P2/P3 + P4 con volumen real; el motor maximiza primero P1 + P2/P3 (en empate, más P1).</li>
-        <li>Largo tolerado por grupo (reemplazado en v9.3 por la cara faltante tolerada en las puntas).</li>
-      </ol>
-      <h3>Motor v9.1: capas extra P3/P4, regla P4 y diámetro del buzón</h3>
-      <ol>
-        <li>Si en una sección hay madera dentro de la tabla, pero no alcanza su cara de arriba, falta el 100 % del ancho de cara y la sección es P4 (antes se trataba como "sin madera"). Si no hay nada de madera en la tabla, sigue sin pieza.</li>
-        <li>Prioridad del objetivo: primero la producción (P1 + P2); luego P3 y luego P4. Las tablas de producción, sus posiciones y los anchos de la Canteadora 2 se eligen igual que en v9.</li>
-        <li>Cortes libres: si al Mill 1 o al Mill 2 le quedan cortes, el motor agrega capas arriba de las de producción, de a una, mientras den más P3 (o, si no hay P3, más P4) sin bajar la producción. En Twin 1 la capa extra tiene el ancho y la posición de la tira (ya canteada); en Twin 2 usa uno de los dos anchos de la Canteadora 2 y su propia posición.</li>
-        <li>Las alternativas se comparan solo por sus capas de producción: un cambio solo en las capas extra no cuenta como alternativa.</li>
-        <li>Diámetro para calcular: la clase de compra (por defecto) o el máximo del buzón que la contiene (B-1 179, B-2 199, B-3 239, B-4 279, B-5 319). Con el máximo del buzón se ve lo que sale de los trozos más gruesos que entran a ese buzón.</li>
-      </ol>
-      <h3>Motor v9: layout real (Mill 2 → Canteadora 2 por capa)</h3>
-      <ol>
-        <li>Datos de máquinas: kerf único, cortes del Mill 1 (Twin 1) y cortes del Mill 2 (Twin 2), de 1 a 4. Se eliminan las sierras de la canteadora.</li>
-        <li>Twin 1: la Canteadora 1 saca una sola tira por lampazo, con el mejor ancho de la lista, y el Mill 1 la corta en tablas apiladas (hasta los cortes del Mill 1). Da lo mismo que el motor v8 con 2 sierras.</li>
-        <li>Twin 2: el Mill 2 corta el lampazo en capas paralelas a la cara de la basa (hasta los cortes del Mill 2; alturas desde la mesa). Cada capa pasa sola por la Canteadora 2, que la cantea a uno de sus dos anchos preparados con su propio desplazamiento y giro: paso 1 (mayor margen) si la capa tiene canto vivo en todo el largo; si no, paso 2 (mayor volumen de la capa; empate: menos canto muerto y menor movimiento).</li>
-        <li>(Reemplazado en v9.4: cada capa usa cualquier ancho.) Anchos de la Canteadora 2: comunes para TW2-C y TW2-D. El motor prueba todos los pares de anchos de la lista y elige el de mayor volumen de producción de TW2-C + TW2-D; si hay empate, el que da la mejor alternativa. Cada capa puede usar cualquiera de los dos anchos. (Esta regla de elección puede cambiar.)</li>
-        <li>(Reemplazado en v9.4 por el panel Medidas por lampazo.) Dos posibilidades por lampazo TW2: la mejor (se usa para el rendimiento y la vista 3D) y una alternativa: el mejor corte que usa otro ancho en al menos una capa.</li>
-        <li>Búsqueda: cada capa sola, con su mejor posición, es una cota de lo que aporta; las pilas de capas se revisan por cota decreciente hasta que la cota no supera la mejor solución (y la alternativa). Verificado contra fuerza bruta (todas las pilas y una malla densa de posiciones).</li>
-        <li>Trozador 2: todas las tablas de un lampazo juntas, con cortes comunes (igual que antes).</li>
-      </ol>
-      <h3>Motor v8: diámetro mínimo y medidas comerciales</h3>
-      <ol>
-        <li>Buzones de la sección Clasificado (descortezador y sensor de diámetro menor sin corteza): B-1 160–179 (incluye menores de 160), B-2 180–199, B-3 200–239, B-4 240–279, B-5 280–319 (incluye mayores de 319). El motor informa el buzón que contiene la clase de compra; si parte de ese buzón queda bajo el mínimo exacto, lo indica en la ayuda.</li>
-        <li>Datos: conicidad (% sobre D menor), largo, curvatura (% del largo), kerf único, alto Twin 1 (H), ancho Twin 2 (C), sierras de la canteadora, cortes del Mill, medidas comerciales (espesores × anchos, hasta 4 × 4, guardadas en el navegador), otros largos y la clasificación P1 a P4.</li>
-        <li>Diámetro menor mínimo: el menor D (140 a 400 mm) con el que la basa H × C tiene canto vivo en todo el largo (margen 0), con D mayor = D × (1 + conicidad) y X = curvatura × largo. Se busca por bisección, porque el margen crece con D. Verificación a mano: trozo recto sin conicidad → D mínimo = diagonal √(H² + C²).</li>
-        <li>Clase de compra: la siguiente clase de 20 mm igual o mayor al mínimo. Secciones, tablas, vista 3D y rendimiento se calculan con ella.</li>
-        <li>Tablas: el motor combina todos los espesores con todos los anchos; en cada tira las tablas se apilan de la más delgada (abajo) a la más gruesa (arriba). Primero muestra un resultado preliminar (los candidatos más prometedores) y luego completa una búsqueda exacta con cotas por tira, sin bloquear la página.</li>
-      </ol>
-      <h3>Motor v7: productos objetivo y clasificación por canto muerto</h3>
-      <ol>
-        <li>El usuario define una lista de hasta 5 productos (espesor × ancho), cada uno con sus largos admitidos. La misma lista se aplica a los 4 lampazos; la basa queda como está.</li>
-        <li>Para cada lampazo el motor prueba las combinaciones de tiras (canteadora, hasta sierras − 1) y de tablas apiladas (Mill, hasta sus cortes), incluidas mezclas de productos; en una tira se pueden apilar productos del mismo ancho y distinto espesor. El Mill ajusta sus alturas por tira.</li>
-        <li>Trozador: cortes comunes para todas las tablas del lampazo; el largo de cada tramo es uno admitido por algún producto. La tabla cuyo producto no admite ese largo, o que no tiene madera, va a la astilladora en ese tramo.</li>
-        <li>Clasificación de cada pieza por canto muerto, en su peor punto: % del ancho de cara que falta en un canto y % del espesor que falta. El valor límite queda en la categoría mejor. P1 (≤ 10 % / ≤ 25 %) y P2 (≤ 30 % / ≤ 50 %): producción; P3 (≤ 90 % / ≤ 90 %): otro proceso; P4: astilladora. Los límites se pueden editar. Nudos y astillado no se pueden predecir con la geometría.</li>
-        <li>Objetivo: mayor volumen de piezas P1 y P2 (producción); en empate, piezas más largas. Medidas de corte nominales exactas. (El peso por prioridad se retiró de la interfaz; el motor lo acepta como dato opcional y por defecto vale 1.)</li>
-      </ol>
-      <h3>Motor v6: trozador con cortes comunes y canteadora en TW2</h3>
-      <ol>
-        <li>Todas las tablas de un lampazo (todas sus tiras y capas) se despuntan juntas, con los mismos cortes. El motor elige los tramos de largos comerciales que dan el mayor volumen total del lampazo; en empate, menos piezas.</li>
-        <li>En cada tramo, la tabla con madera válida (sin secciones fuera y con canto muerto ≤ ℓ_cm) da su pieza; el trozo de la tabla que no la tiene va a la astilladora.</li>
-        <li>La canteadora desplaza y gira también TW2-C y TW2-D, con el mismo criterio que TW1-A y TW1-B: paso 1, mayor margen mínimo; si todas las tablas caben en largo completo, esa es la posición; si no, paso 2, mayor volumen de piezas.</li>
-        <li>El Mill ajusta sus alturas por separado para cada tira. Cualquier largo de la lista de largos comerciales es válido.</li>
-      </ol>
-      <h3>Motor v5: sugerencia de basa</h3>
-      <ol>
-        <li>Para cada alto H entero, el ancho máximo con canto vivo en todo el largo es <span class="formula">C = mín(s + w) + mín(w − s)</span>, con <span class="formula">w(z) = √(r(z)² − (H/2)²)</span>, usando la conicidad, la curvatura y el desplazamiento e óptimo de TW2. Se revisa cada 1 mm a lo largo.</li>
-        <li>C se redondea hacia abajo a número entero y se exige C ≤ H (medida menor en Twin 2). Se elige la mayor área C × H; en empate, la más cuadrada.</li>
-        <li><strong>Margen 0:</strong> la sugerencia deja las esquinas de la basa justo en el límite de la madera. No incluye margen por error de medición ni por variación del trozo.</li>
-        <li>Solo considera la basa: no evalúa lampazos ni tablas, y no depende del ancho de corte. El botón "Aplicar" copia C y H; el usuario puede seguir escribiendo sus medidas.</li>
-      </ol>
-      <h3>Motor v4: conicidad, piezas y canto muerto</h3>
-      <ol>
-        <li>Conicidad lineal a partir de dos diámetros: <span class="formula">d(z) = D + (D mayor − D)·z/L</span>, con z = 0 en la punta delgada (D según JAS). Cálculo por secciones cada Δz = 10 mm; volumen geométrico como suma de troncos de cono.</li>
-        <li>Curvatura en arco centrado respecto de la cuerda: <span class="formula">s(z) = 4·X·z·(L − z)/L²</span>.</li>
-        <li>TW1 centra el trozo. TW2 solo desplaza: <span class="formula">e = (mín(s + w) − mín(w − s))/2</span>, con <span class="formula">w(z) = √(r(z)² − (H/2)²)</span>; margen mínimo <span class="formula">(mín(s + w) + mín(w − s))/2 − C/2</span>. Sin conicidad, e = X/2.</li>
-        <li>Basa: canto vivo en todo el largo. Si no, el motor informa los tramos z₁–z₂ por lado (sierra fuera o canto muerto), calculados por bisección, y la altura faltante w_H.</li>
-        <li>Canteadora TW1-A/B (y desde v6 también TW2-C/D): desplaza y gira. Paso 1: mayor margen mínimo (búsqueda del giro con desplazamiento óptimo). Si todas las tablas caben en largo completo con canto vivo, esa es la posición; si no, paso 2: posición con mayor volumen de piezas.</li>
-        <li>Mill: cortes paralelos a la mesa, alturas independientes por tira.</li>
-        <li>Cada tabla se clasifica por sección: canto vivo, canto muerto en tolerancia (b_w y b_e dentro de sus máximos) o fuera. Una pieza es válida sin secciones fuera y con largo en canto muerto ≤ ℓ_cm % de su largo.</li>
-        <li>Trozador (despunte): piezas de los largos comerciales, varias por tabla, separadas por el ancho de corte del trozador (redondeado a múltiplos de 10 mm). Objetivo: mayor volumen (e × a × largo, también con canto muerto, con advertencia); en empate, menos piezas y menos tablas.</li>
-        <li>Definido para la línea: en TW2, lado convexo = TW2-C y lado cóncavo = TW2-D. En TW1, TW2 y las canteadoras el trozo avanza con la punta delgada adelante. Los lampazos se nombran solo como TW1-A, TW1-B, TW2-C y TW2-D. Referencia para configurar la línea (mirando en el sentido de avance): TW1-A derecha, TW1-B izquierda, TW2-C izquierda, TW2-D derecha.</li>
-        <li>Definido para la línea: los lampazos llegan a la canteadora apoyados sobre su cara plana y con la punta delgada adelante; TW1-B es la imagen reflejada de TW1-A. Desplazamiento e_c y giro φ con signo: en la Canteadora 1, + hacia el canto convexo del lampazo; en la Canteadora 2, + hacia el lado TW1-A.</li>
-        <li>Definido para la línea (sentido de giro entre TW1 y TW2): en TW1 la curvatura queda hacia arriba y en TW2 hacia TW2-C, por lo que al girar 90° la cara de TW1-A queda arriba y la de TW1-B abajo.</li>
-        <li>Vistas de frente (secciones en Twin 1 y Twin 2, y fichas de lampazos): se dibujan desde la entrada de la máquina, con el trozo avanzando hacia el observador. Cada lampazo se rotula con su nombre.</li>
-      </ol>
-      <h3>Pendiente</h3>
-      <p>Para más adelante: reaserrío de la basa (Mill 3, Storti y Trozador 1); lista fija de largos cuando vuelvan los trozadores. (El volumen real sin canto muerto y la producción total del trozo / JAS ya están en v9.6.)</p>
-
-    </div>
+      <div class="tabpanel" role="tabpanel" id="p-casos" hidden><button id="runCasos"></button><button class="dl-btn" id="dlCasos" hidden disabled></button><p id="casosResumen"></p><table id="tablaCasos"></table><input type="text" id="refNombre"><button id="guardarRef"></button><p id="refStatus"></p></div>
+      <div class="tabpanel" role="tabpanel" id="p-sup"></div>
     </div>
   </div>
   <footer class="aviso-prop">© Esteban Ortega Sepúlveda · Todos los derechos reservados · Prohibida su copia o distribución</footer>
@@ -5049,7 +4911,7 @@ $("dlCasos").addEventListener("click", () => {
 /* ---------- Pestañas ---------- */
 const tabs = [...document.querySelectorAll('.tablist [role="tab"]')];
 // v9.6: la pestaña Casos de prueba queda oculta; se abre agregando #casos a la dirección de la página
-function mostrarCasosSiPide() { const t = $("t-casos"); if (!t) return; const si = location.hash === "#casos"; t.hidden = !si; if (si) activar(t); else if (t.getAttribute("aria-selected") === "true") activar($("t-sup")); }
+function mostrarCasosSiPide() { const t = $("t-casos"); if (!t) return; const si = false; t.hidden = !si; if (si) activar(t); else if (t.getAttribute("aria-selected") === "true") activar($("t-sup")); }
 function activar(tab) {
   tabs.forEach((t) => { const sel = t === tab; t.setAttribute("aria-selected", sel); t.tabIndex = sel ? 0 : -1; $(t.getAttribute("aria-controls")).hidden = !sel; });
   try { sessionStorage.setItem("qa-tab", tab.id); } catch {}
