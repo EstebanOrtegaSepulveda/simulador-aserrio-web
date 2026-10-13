@@ -4658,6 +4658,7 @@ function pintarResumen(ru) {
     <h3 class="sub-h" style="margin:16px 0 6px;font-size:1.1rem">Piezas del trozo</h3>
     <div class="res-wrap"><table class="res-tabla"><thead><tr><th>Medida (mm)</th><th>Grupo</th><th class="n">Piezas</th><th class="n">Producción</th><th class="n">Aprovechamiento</th></tr></thead>
       <tbody>${trs.join("")}</tbody><tfoot><tr><td>Total</td><td></td><td class="n">${nTot}</td><td class="n">${fmt(prod, 4)} m³</td><td class="n">${ap(prod)}</td></tr></tfoot></table></div>`;
+  v3dBasaRefrescar();
 }
 document.addEventListener("click", (ev) => { const s = ev.target.closest("[data-res-dim]"); if (!s || s.disabled) return; RES_BASA = RES_BASA === "dimensionada" ? "completa" : "dimensionada"; try { localStorage.setItem(RES_BASA_KEY, RES_BASA); } catch (err) { /* sin almacenamiento */ } pintarResumen(RES_RU); document.querySelector("[data-res-dim]")?.focus(); });
 document.addEventListener("click", (ev) => { const s = ev.target.closest("[data-res-inc]"); if (!s) return; const g = +s.dataset.resInc; RES_INC[g] = !RES_INC[g]; pintarResumen(RES_RU); });
@@ -4918,8 +4919,15 @@ function v3dConstruir(inp, r) {
     }
   }
   // Basa
-  caja(rect(m(-H / 2), m(H / 2), m(e - C / 2), m(e + C / 2), 0, m(L)), V3_COL.basa, "basa");
-  etiquetas.push({ txt: `Basa ${fmt(C, 0)} × ${fmt(H, 0)}`, p: [0, m(e), m(-60)], grupo: "basa" });
+  // v9.17: basa dimensionada (piezas del Mill 3 y la Storti) o completa, según el interruptor «Dimensionar» del Resumen
+  const piezasBasa = v3dBasaDim(inp, r); V3.args = [inp, r]; V3.firmaBasa = JSON.stringify(piezasBasa);
+  if (piezasBasa && piezasBasa.lista.length) {
+    for (const q of piezasBasa.lista) caja(rect(m(q.x0), m(q.x1), m(q.y0), m(q.y1), 0, m(L)), V3_COL.basa, "basa", { offCv: q.offCv });
+    etiquetas.push({ txt: "Basa", p: [0, m(e), m(-60)], grupo: "basa" }); // v9.17: dimensionada, solo «Basa» (las medidas están en el Resumen y en la Storti)
+  } else {
+    caja(rect(m(-H / 2), m(H / 2), m(e - C / 2), m(e + C / 2), 0, m(L)), V3_COL.basa, "basa");
+    etiquetas.push({ txt: `Basa ${fmt(C, 0)} × ${fmt(H, 0)}`, p: [0, m(e), m(-60)], grupo: "basa" });
+  }
   // Piezas de los lampazos, en su posición real dentro del trozo
   const DIR = { A: [1, 0, 0], B: [-1, 0, 0], [LADO_CONVEXO_TW2]: [0, 1, 0], [LADO_CONVEXO_TW2 === "C" ? "D" : "C"]: [0, -1, 0] };
   if (r && r.ok) for (const k of ["A", "B", "C", "D"]) {
@@ -4966,6 +4974,34 @@ function v3dConstruir(inp, r) {
   if (!V3.cam) v3dVistaInicial();
   v3dPedir();
 }
+/** v9.17: piezas finales de la basa en el trozo (mm, coordenadas del mundo): Mill 3 en capas desde la mesa y Storti en columnas
+ * desde la orilla izquierda. Sin girar: el alto del Mill 3 es H (eje x) y el ancho de la Storti es C (eje y); girada: al revés.
+ * offCv: separación de cada pieza con «Separar capas» (m al 100 %). */
+function v3dBasaDim(inp, r) {
+  try { if (r && r.ok && typeof RES_BASA !== "undefined" && RES_BASA === "dimensionada" && calcularCorte(inp).cantoVivo) return v3dPiezasBasa(inp); } catch (err) { /* sin piezas */ }
+  return null;
+}
+/** v9.17: si cambian las piezas de la basa (Mill 3, Storti o «Dimensionar»), se rehace la Vista 3D */
+function v3dBasaRefrescar() { if (!V3.args) return; const f = JSON.stringify(v3dBasaDim(V3.args[0], V3.args[1])); if (f !== V3.firmaBasa) v3dConstruir(V3.args[0], V3.args[1]); }
+function v3dPiezasBasa(inp) {
+  const st = stResultado(inp), { H0, C0, girada } = st.m3 || m3Resultado(inp), m3 = m3Resultado(inp), e = (LZ_BASE && LZ_BASE.ok ? LZ_BASE.eTW2 : inp.X / 2);
+  const capas = m3.op ? m3.op.capas : [m3.H], Km = m3.K, Ks = st.K, GB = 0.05;
+  const alto = girada ? [0, 1] : [1, 0], anch = girada ? [1, 0] : [0, 1];
+  const x0 = -inp.H / 2, y0 = e - inp.C / 2, lista = [];
+  let a = 0; const nL = capas.length;
+  capas.forEach((t, j) => {
+    const p = st.piezas[j], op = p ? p.op : null, W = m3.C;
+    const cols = []; if (!op || op.girada) cols.push([0, W]); else { let x = op.rectIzq || 0; for (const c of op.cols) { cols.push([x, x + c]); x += c + Ks; } }
+    cols.forEach(([u0, u1], i) => {
+      const P = (al, an) => [x0 + alto[0] * al + anch[0] * an, y0 + alto[1] * al + anch[1] * an], A = P(a, u0), B = P(a + t, u1);
+      const dj = j - (nL - 1) / 2, di = i - (cols.length - 1) / 2;
+      lista.push({ x0: Math.min(A[0], B[0]), x1: Math.max(A[0], B[0]), y0: Math.min(A[1], B[1]), y1: Math.max(A[1], B[1]), offCv: [(alto[0] * dj + anch[0] * di) * GB, (alto[1] * dj + anch[1] * di) * GB, 0] });
+    });
+    a += t + Km;
+  });
+  const fin = stFinales(st), txt = "Basa: " + fin.map((f) => `${f.n} × ${numTxt(f.a)} × ${numTxt(f.b)}`).join(" + ");
+  return { lista, txt };
+}
 function v3dVistaInicial() { V3.cam = { yaw: -2.25, pitch: 0.36, dist: 4.1 }; v3dPedir(); } // tres cuartos desde arriba: lado TW1-B, hacia la punta delgada
 function v3dPedir() { if (V3.pend) return; V3.pend = true; requestAnimationFrame(() => { V3.pend = false; v3dDibujar(); }); }
 function v3dDibujar() {
@@ -4983,7 +5019,7 @@ function v3dDibujar() {
   const up = [right[1] * fwd[2] - right[2] * fwd[1], right[2] * fwd[0] - right[0] * fwd[2], right[0] * fwd[1] - right[1] * fwd[0]];
   const f = Math.min(W, Hh) * 1.6;
   const sep = V3.sep, OFF = 0.30, GZ = 0.10, GC = 0.10, sc2 = (V3.sepC || 0) * GC;
-  const mover = (p, cara) => (cara.dir ? [p[0] + cara.dir[0] * (OFF * sep + (cara.nc || 0) * sc2), p[1] + cara.dir[1] * (OFF * sep + (cara.nc || 0) * sc2), p[2] + (cara.iz || 0) * GZ * sep] : p);
+  const mover = (p, cara) => (cara.offCv ? [p[0] + cara.offCv[0] * (V3.sepC || 0), p[1] + cara.offCv[1] * (V3.sepC || 0), p[2]] : cara.dir ? [p[0] + cara.dir[0] * (OFF * sep + (cara.nc || 0) * sc2), p[1] + cara.dir[1] * (OFF * sep + (cara.nc || 0) * sc2), p[2] + (cara.iz || 0) * GZ * sep] : p);
   const cam = (p) => { const d = [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]]; return [d[0] * right[0] + d[1] * right[1] + d[2] * right[2], d[0] * up[0] + d[1] * up[1] + d[2] * up[2], d[0] * fwd[0] + d[1] * fwd[1] + d[2] * fwd[2]]; };
   const pr = (q) => [W / 2 + (q[0] / q[2]) * f, Hh / 2 - (q[1] / q[2]) * f];
   let g;
@@ -5075,7 +5111,7 @@ function v3dGLBuferes() {
     if (!Math.hypot(nx, ny, nz)) { nx = 0; ny = 1; nz = 0; }
     const col = v3dHexRGB(cara.col);
     const off = cara.dir ? [cara.dir[0] * OFF, cara.dir[1] * OFF, (cara.iz || 0) * GZ] : [0, 0, 0];
-    const offC = cara.dir ? [cara.dir[0] * GC * (cara.nc || 0), cara.dir[1] * GC * (cara.nc || 0), 0] : [0, 0, 0];
+    const offC = cara.offCv ? cara.offCv : cara.dir ? [cara.dir[0] * GC * (cara.nc || 0), cara.dir[1] * GC * (cara.nc || 0), 0] : [0, 0, 0];
     const dst = cara.env ? env : sol, tipo = cara.env ? 1 : 0;
     const v = (p) => dst.push(p[0], p[1], p[2], nx, ny, nz, col[0], col[1], col[2], off[0], off[1], off[2], offC[0], offC[1], offC[2], tipo);
     for (let i = 1; i < n - 1; i++) { v(P[0]); v(P[i]); v(P[i + 1]); }
